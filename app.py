@@ -14,7 +14,15 @@ from flask_cors import CORS
 
 app = create_app() 
 
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "https://blissman.ke",
+            "https://www.blissman.ke"
+        ]
+    }
+}, supports_credentials=True)
+
 
 migrate = Migrate(app, db)
 
