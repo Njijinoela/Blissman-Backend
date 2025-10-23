@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
+from sqlalchemy import text
 import os
 from dotenv import load_dotenv
 
@@ -40,7 +41,7 @@ def create_app():
     # Optional test: confirm DB connection on startup
     with app.app_context():
         try:
-            db.session.execute("SELECT 1")
+            db.session.execute(text("SELECT 1"))
             print("✅ Database connection successful")
         except Exception as e:
             print("❌ Database connection failed:", e)
