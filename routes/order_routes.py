@@ -85,11 +85,11 @@ def create_order():
     Total: KES {total}
     """
 
-    try:
-        send_email(os.environ.get("COMPANY_EMAIL"), f"New Order #{order.id}", order_text)
-        send_email(email, f"Your Order Confirmation #{order.id}", order_text)
-    except Exception as e:
-        print("❌ Email sending failed:", e)
+    # try:
+    #     send_email(os.environ.get("COMPANY_EMAIL"), f"New Order #{order.id}", order_text)
+    #     send_email(email, f"Your Order Confirmation #{order.id}", order_text)
+    # except Exception as e:
+    #     print("❌ Email sending failed:", e)
 
     return jsonify({
         "message": "Order created successfully",
