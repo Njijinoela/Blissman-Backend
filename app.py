@@ -7,7 +7,6 @@ from routes.portfolio_routes import portfolio_bp
 from routes.team_routes import team_bp
 from routes.quote_routes import quote_bp
 from routes.contact_routes import contact_bp
-from routes.faq_routes import faq_bp
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask import request, jsonify
@@ -39,7 +38,7 @@ app.register_blueprint(portfolio_bp)
 app.register_blueprint(team_bp)
 app.register_blueprint(quote_bp)
 app.register_blueprint(contact_bp)
-app.register_blueprint(faq_bp)
+
 
 
 @app.route("/")

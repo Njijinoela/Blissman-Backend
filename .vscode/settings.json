@@ -10,6 +10,17 @@
       "database": "postgres",
       "username": "postgres.crewosiocztcjfurggkf",
       "password": "HW9ju2Er?NR3/46"
+    },
+    {
+      "ssh": "Disabled",
+      "previewLimit": 50,
+      "server": "aws-1-eu-north-1.pooler.supabase.com",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "password": "6Uj5yWbdTHD5BIUS",
+      "username": "postgres.crewosiocztcjfurggkf",
+      "database": "postgres",
+      "name": "posgress"
     }
   ]
 }

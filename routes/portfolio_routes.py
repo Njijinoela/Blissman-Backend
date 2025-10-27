@@ -42,3 +42,38 @@ def get_portfolio_item(slug):
             {"question": f.question, "answer": f.answer} for f in p.faqs
         ]
     })
+
+@portfolio_bp.route("/<int:portfolio_id>/faqs", methods=["POST"])
+def add_portfolio_faq(portfolio_id):
+    data = request.get_json()
+    question = data.get("question")
+    answer = data.get("answer")
+
+    if not question or not answer:
+        return jsonify({"error": "Question and answer are required"}), 400
+
+    faq = PortfolioFAQ(question=question, answer=answer, portfolio_id=portfolio_id)
+    db.session.add(faq)
+    db.session.commit()
+
+    return jsonify({
+        "message": "FAQ added successfully",
+        "faq": {"id": faq.id, "question": faq.question, "answer": faq.answer}
+    }), 201
+
+
+@portfolio_bp.route("/faqs/<int:faq_id>", methods=["DELETE"])
+def delete_portfolio_faq(faq_id):
+    faq = PortfolioFAQ.query.get_or_404(faq_id)
+    db.session.delete(faq)
+    db.session.commit()
+    return jsonify({"message": "FAQ deleted successfully"}), 200
+
+@portfolio_bp.route("/faqs/<int:faq_id>", methods=["PUT"])
+def update_faq(faq_id):
+    faq = PortfolioFAQ.query.get_or_404(faq_id)
+    data = request.get_json()
+    faq.question = data.get("question", faq.question)
+    faq.answer = data.get("answer", faq.answer)
+    db.session.commit()
+    return jsonify({"message": "FAQ updated", "faq": {"id": faq.id, "question": faq.question, "answer": faq.answer}})
