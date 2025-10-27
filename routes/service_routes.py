@@ -11,9 +11,9 @@ def get_services():
 
 @service_bp.route("/", methods=["POST"])
 def add_service():
-    data = request.json
+    data = request.get_json()
     service = Service(
-        title=data["title"],
+        title=data.get("title"),
         description=data.get("description"),
         image_url=data.get("image_url"),
         icon=data.get("icon"),
@@ -22,11 +22,29 @@ def add_service():
     )
     db.session.add(service)
     db.session.commit()
-    return jsonify({"message": "Service added", "id": service.id}), 201
+    return jsonify(service.to_dict()), 201
 
 @service_bp.route("/<int:service_id>", methods=["GET", "PUT", "DELETE"])
-def get_service(service_id):
+def handle_service(service_id):
     service = Service.query.get(service_id)
     if not service:
         return jsonify({"error": "Service not found"}), 404
-    return jsonify(service.to_dict())
+
+    if request.method == "GET":
+        return jsonify(service.to_dict())
+
+    elif request.method == "PUT":
+        data = request.get_json()
+        service.title = data.get("title", service.title)
+        service.description = data.get("description", service.description)
+        service.image_url = data.get("image_url", service.image_url)
+        service.icon = data.get("icon", service.icon)
+        service.portfolio = data.get("portfolio", service.portfolio)
+        service.faqs = data.get("faqs", service.faqs)
+        db.session.commit()
+        return jsonify(service.to_dict())
+
+    elif request.method == "DELETE":
+        db.session.delete(service)
+        db.session.commit()
+        return jsonify({"message": "Service deleted"}), 200
