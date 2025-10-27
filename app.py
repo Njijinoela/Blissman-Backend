@@ -10,6 +10,9 @@ from routes.contact_routes import contact_bp
 from routes.faq_routes import faq_bp
 from flask_migrate import Migrate
 from flask_cors import CORS
+from flask import request, jsonify
+import os
+from werkzeug.utils import secure_filename
 
 
 app = create_app() 
@@ -18,7 +21,8 @@ CORS(app, resources={
     r"/*": {
         "origins": [
             "https://blissman.ke",
-            "https://www.blissman.ke"
+            "https://www.blissman.ke",
+            "http://localhost:5173",
         ]
     }
 }, supports_credentials=True)
@@ -41,3 +45,23 @@ app.register_blueprint(faq_bp)
 @app.route("/")
 def home():
     return "Flask + Supabase connected with Flask-Migrate!"
+
+
+UPLOAD_FOLDER = "static/uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+@app.route("/upload", methods=["POST"])
+def upload_file():
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    file = request.files["file"]
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(filepath)
+
+    # Construct full accessible URL
+    base_url = request.host_url.rstrip("/")
+    file_url = f"{base_url}/{filepath}"
+
+    return jsonify({"url": file_url})

@@ -24,7 +24,7 @@ def add_service():
     db.session.commit()
     return jsonify({"message": "Service added", "id": service.id}), 201
 
-@service_bp.route("/<int:service_id>", methods=["GET"])
+@service_bp.route("/<int:service_id>", methods=["GET", "PUT", "DELETE"])
 def get_service(service_id):
     service = Service.query.get(service_id)
     if not service:
