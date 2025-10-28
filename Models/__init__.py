@@ -5,8 +5,8 @@ from .product import Product
 from .order import Order, OrderItem
 from .service import Service
 from .portfolio import Portfolio
-from .team import Team
-from .quote import Quote
-from .contact import Contact
+from .team import TeamMember
+from .quote import QuoteRequest
+from .contact import ContactMessage
 
 
