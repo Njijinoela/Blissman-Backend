@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import check_password_hash
-from Models import User
+from Models.user import User
 import jwt
 import datetime
 import os
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import or_
 
 auth_bp = Blueprint("auth_bp", __name__)
 
@@ -28,7 +29,9 @@ def admin_login():
     try:
         # Check if User table exists and query safely
         user = User.query.filter(
-            (User.email == username_or_email) | (User.name == username_or_email)
+            or_
+            (User.email == username_or_email,
+             User.name == username_or_email)
         ).first()
 
         if not user:
@@ -37,9 +40,13 @@ def admin_login():
         if user.role != "admin":
             return jsonify({"success": False, "message": "Not authorized"}), 403
 
+        if not user.password_hash:
+            return jsonify({"success": False, "message": "Password not set for user"}), 401
+
+
         if not check_password_hash(user.password_hash, password):
             return jsonify({"success": False, "message": "Incorrect password"}), 401
-
+        
         # Generate JWT token
         token = jwt.encode(
             {
