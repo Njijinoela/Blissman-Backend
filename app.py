@@ -13,9 +13,17 @@ from flask_cors import CORS
 from flask import request, jsonify
 import os
 from werkzeug.utils import secure_filename
+import cloudinary
+import cloudinary.uploader
 
 
 app = create_app() 
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+)
 
 CORS(app, resources={
     r"/*": {
@@ -45,26 +53,26 @@ app.register_blueprint(auth_bp)
 
 
 
-@app.route("/")
-def home():
-    return "Flask + Supabase connected with Flask-Migrate!"
-
-
-UPLOAD_FOLDER = "static/uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
 @app.route("/upload", methods=["POST"])
 def upload_file():
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["file"]
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
-    file.save(filepath)
 
-    # Construct full accessible URL
-    base_url = request.host_url.rstrip("/")
-    file_url = f"{base_url}/{filepath}"
+    try:
+        # Upload to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            file,
+            folder="blissman_uploads",  # optional folder name
+            resource_type="auto"  # handles both images & videos
+        )
 
-    return jsonify({"url": file_url})
+        # Cloudinary returns a permanent URL
+        return jsonify({
+            "url": upload_result["secure_url"],
+            "public_id": upload_result["public_id"]
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
