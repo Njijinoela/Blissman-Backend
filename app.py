@@ -7,6 +7,7 @@ from routes.portfolio_routes import portfolio_bp
 from routes.team_routes import team_bp
 from routes.quote_routes import quote_bp
 from routes.contact_routes import contact_bp
+from routes.auth_routes import auth_bp
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask import request, jsonify
@@ -24,7 +25,9 @@ CORS(app, resources={
             "http://localhost:5173",
         ]
     }
-}, supports_credentials=True)
+}, supports_credentials=True,
+methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization"])
 
 
 migrate = Migrate(app, db)
@@ -38,6 +41,7 @@ app.register_blueprint(portfolio_bp)
 app.register_blueprint(team_bp)
 app.register_blueprint(quote_bp)
 app.register_blueprint(contact_bp)
+app.register_blueprint(auth_bp)
 
 
 
