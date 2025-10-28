@@ -37,7 +37,7 @@ def admin_login():
         if user.role != "admin":
             return jsonify({"success": False, "message": "Not authorized"}), 403
 
-        if not check_password_hash(user.password_hash, password):
+        if not check_password_hash(User.password_hash, password):
             return jsonify({"success": False, "message": "Incorrect password"}), 401
 
         # Generate JWT token
