@@ -9,6 +9,7 @@ def get_services():
     services = Service.query.all()
     return jsonify([s.to_dict() for s in services])
 
+
 @service_bp.route("/", methods=["POST"])
 def add_service():
     data = request.get_json()

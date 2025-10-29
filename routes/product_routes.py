@@ -5,25 +5,16 @@ from Models.product import Product
 product_bp = Blueprint("product_bp", __name__, url_prefix="/products")
 
 # Helper: serialize product
-def serialize_product(product):
-    return {
-        "id": product.id,
-        "name": product.name,
-        "description": product.description,
-        "price": float(product.price),   # convert Decimal → float
-        "image_url": product.image_url,
-        "availability": product.availability,
-        "category": product.category,
-        "specs": product.specs,
-        "features": product.features,
-        "warranty": product.warranty,
-    }
-
-# Get all products
+# Helper: serialize product
 @product_bp.route("/", methods=["GET"])
 def get_products():
     products = Product.query.all()
-    return jsonify([serialize_product(p) for p in products])
+    return jsonify([p.to_dict() for p in products])
+
+@product_bp.route("/<int:product_id>", methods=["GET"])
+def get_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    return jsonify(product.to_dict())
 
 # Add a new product
 @product_bp.route("/", methods=["POST"])
@@ -44,11 +35,6 @@ def add_product():
     db.session.commit()
     return jsonify({"message": "Product added", "id": product.id}), 201
 
-# Get single product
-@product_bp.route("/<int:product_id>", methods=["GET"])
-def get_product(product_id):
-    product = Product.query.get_or_404(product_id)
-    return jsonify(serialize_product(product))
 
 # Update product
 @product_bp.route("/<int:product_id>", methods=["PUT"])

@@ -7,41 +7,78 @@ portfolio_bp = Blueprint("portfolio_bp", __name__, url_prefix="/portfolio")
 @portfolio_bp.route("/", methods=["GET"])
 def get_portfolio():
     portfolios = Portfolio.query.all()
-    return jsonify([
-        {
+    result = []
+
+    for p in portfolios:
+        portfolio_data = {
             "id": p.id,
             "slug": p.slug,
             "title": p.title,
             "description": p.description,
             "icon": p.icon,
-            "images": [img.url for img in p.images],
-            "media": [
-                {"type": m.type, "url": m.url, "caption": m.caption} for m in p.media
-            ],
-            "faqs": [
-                {"question": f.question, "answer": f.answer} for f in p.faqs
-            ]
-        } for p in portfolios
-    ])
+            "images": [],
+            "media": [],
+            "faqs": [{"question": f.question, "answer": f.answer} for f in p.faqs],
+        }
+
+        # Handle images (normalize URLs)
+        for img in p.images:
+            url = img.url
+            if url and not url.startswith("http"):
+                # Convert relative/static paths to full URLs
+                url = f"https://blissman-backend.onrender.com/{url.lstrip('/')}"
+            portfolio_data["images"].append(url)
+
+        # Handle media (normalize URLs)
+        for m in p.media:
+            url = m.url
+            if url and not url.startswith("http"):
+                url = f"https://blissman-backend.onrender.com/{url.lstrip('/')}"
+            portfolio_data["media"].append({
+                "type": m.type,
+                "url": url,
+                "caption": m.caption
+            })
+
+        result.append(portfolio_data)
+
+    return jsonify(result)
 
 
 @portfolio_bp.route("/<string:slug>", methods=["GET"])
 def get_portfolio_item(slug):
     p = Portfolio.query.filter_by(slug=slug).first_or_404()
+
+    # Normalize image and media URLs
+    images = []
+    for img in p.images:
+        url = img.url
+        if url and not url.startswith("http"):
+            url = f"https://blissman-backend.onrender.com/{url.lstrip('/')}"
+        images.append(url)
+
+    media = []
+    for m in p.media:
+        url = m.url
+        if url and not url.startswith("http"):
+            url = f"https://blissman-backend.onrender.com/{url.lstrip('/')}"
+        media.append({
+            "type": m.type,
+            "url": url,
+            "caption": m.caption
+        })
+
     return jsonify({
         "id": p.id,
         "slug": p.slug,
         "title": p.title,
         "description": p.description,
         "icon": p.icon,
-        "images": [img.url for img in p.images],
-        "media": [
-            {"type": m.type, "url": m.url, "caption": m.caption} for m in p.media
-        ],
-        "faqs": [
-            {"question": f.question, "answer": f.answer} for f in p.faqs
-        ]
+        "images": images,
+        "media": media,
+        "faqs": [{"question": f.question, "answer": f.answer} for f in p.faqs],
     })
+
 
 @portfolio_bp.route("/<int:portfolio_id>/faqs", methods=["POST"])
 def add_portfolio_faq(portfolio_id):
