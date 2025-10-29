@@ -4,80 +4,34 @@ from Models.portfolio import Portfolio, PortfolioImage, PortfolioMedia, Portfoli
 
 portfolio_bp = Blueprint("portfolio_bp", __name__, url_prefix="/portfolio")
 
+
 @portfolio_bp.route("/", methods=["GET"])
-def get_portfolio():
-    portfolios = Portfolio.query.all()
-    result = []
-
-    for p in portfolios:
-        portfolio_data = {
-            "id": p.id,
-            "slug": p.slug,
-            "title": p.title,
-            "description": p.description,
-            "icon": p.icon,
-            "images": [],
-            "media": [],
-            "faqs": [{"question": f.question, "answer": f.answer} for f in p.faqs],
-        }
-
-        # Handle images (normalize URLs)
-        for img in p.images:
-            url = img.url
-            if url and not url.startswith("http"):
-                # Convert relative/static paths to full URLs
-                url = f"https://blissman-backend.onrender.com/{url.lstrip('/')}"
-            portfolio_data["images"].append(url)
-
-        # Handle media (normalize URLs)
-        for m in p.media:
-            url = m.url
-            if url and not url.startswith("http"):
-                url = f"https://blissman-backend.onrender.com/{url.lstrip('/')}"
-            portfolio_data["media"].append({
-                "type": m.type,
-                "url": url,
-                "caption": m.caption
-            })
-
-        result.append(portfolio_data)
-
-    return jsonify(result)
+def get_portfolios():
+    try:
+        portfolios = Portfolio.query.all()
+        return jsonify([p.to_dict() for p in portfolios]), 200
+    except Exception as e:
+        print("❌ Error in get_portfolios:", e)
+        return jsonify({"error": str(e)}), 500
 
 
-@portfolio_bp.route("/<string:slug>", methods=["GET"])
-def get_portfolio_item(slug):
-    p = Portfolio.query.filter_by(slug=slug).first_or_404()
+@portfolio_bp.route("/<string:slug_or_id>", methods=["GET"])
+def get_portfolio_detail(slug_or_id):
+    try:
+        # Check if it's an integer ID or a slug
+        if slug_or_id.isdigit():
+            portfolio = Portfolio.query.get(int(slug_or_id))
+        else:
+            portfolio = Portfolio.query.filter_by(slug=slug_or_id).first()
 
-    # Normalize image and media URLs
-    images = []
-    for img in p.images:
-        url = img.url
-        if url and not url.startswith("http"):
-            url = f"https://blissman-backend.onrender.com/{url.lstrip('/')}"
-        images.append(url)
+        if not portfolio:
+            return jsonify({"error": "Portfolio not found"}), 404
 
-    media = []
-    for m in p.media:
-        url = m.url
-        if url and not url.startswith("http"):
-            url = f"https://blissman-backend.onrender.com/{url.lstrip('/')}"
-        media.append({
-            "type": m.type,
-            "url": url,
-            "caption": m.caption
-        })
+        return jsonify(portfolio.to_dict()), 200
 
-    return jsonify({
-        "id": p.id,
-        "slug": p.slug,
-        "title": p.title,
-        "description": p.description,
-        "icon": p.icon,
-        "images": images,
-        "media": media,
-        "faqs": [{"question": f.question, "answer": f.answer} for f in p.faqs],
-    })
+    except Exception as e:
+        print("❌ Error in get_portfolio_detail:", e)
+        return jsonify({"error": str(e)}), 500
 
 
 @portfolio_bp.route("/<int:portfolio_id>/faqs", methods=["POST"])
