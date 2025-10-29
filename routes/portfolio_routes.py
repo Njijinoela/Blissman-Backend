@@ -77,26 +77,50 @@ def create_portfolio():
     icon = data.get("icon")
     slug = data.get("slug")
 
-    if not title or not description:
-        return jsonify({"error": "Title and description are required"}), 400
-
     portfolio = Portfolio(title=title, description=description, icon=icon, slug=slug)
     db.session.add(portfolio)
     db.session.commit()
 
-    return jsonify({"message": "Portfolio created successfully", "id": portfolio.id}), 201
+    # ✅ Handle images
+    images = data.get("images", [])
+    for img in images:
+        if "url" in img:
+            db.session.add(PortfolioImage(url=img["url"], portfolio_id=portfolio.id))
+
+    # ✅ Handle media (optional, if you support videos)
+    media_items = data.get("media", [])
+    for m in media_items:
+        if "url" in m:
+            db.session.add(PortfolioMedia(url=m["url"], portfolio_id=portfolio.id))
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Portfolio created successfully",
+        "id": portfolio.id
+    }), 201
+
 
 @portfolio_bp.route("/<int:portfolio_id>", methods=["PUT"])
 def update_portfolio(portfolio_id):
-    portfolio = Portfolio.query.get_or_404(portfolio_id)
     data = request.get_json()
+    portfolio = Portfolio.query.get_or_404(portfolio_id)
 
     portfolio.title = data.get("title", portfolio.title)
     portfolio.description = data.get("description", portfolio.description)
     portfolio.icon = data.get("icon", portfolio.icon)
     portfolio.slug = data.get("slug", portfolio.slug)
+    db.session.commit()
+
+    # ✅ Refresh portfolio images (simple replace)
+    PortfolioImage.query.filter_by(portfolio_id=portfolio.id).delete()
+    images = data.get("images", [])
+    for img in images:
+        if "url" in img:
+            db.session.add(PortfolioImage(url=img["url"], portfolio_id=portfolio.id))
 
     db.session.commit()
+
     return jsonify({"message": "Portfolio updated successfully"}), 200
 
 @portfolio_bp.route("/<int:portfolio_id>", methods=["DELETE"])
