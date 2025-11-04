@@ -25,16 +25,22 @@ class Portfolio(db.Model):
         "title": self.title,
         "description": self.description,
         "icon": self.icon,
+
         "images": [img.url for img in self.images],
+
+        "videos": [m.url for m in self.media if m.type == "video"],
+
         "media": [
             {"type": m.type, "url": m.url, "caption": m.caption}
             for m in self.media
         ],
+
         "faqs": [
             {"question": f.question, "answer": f.answer}
             for f in self.faqs
         ],
     }
+
 
 
 class PortfolioImage(db.Model):

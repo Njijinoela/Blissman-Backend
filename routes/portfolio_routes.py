@@ -81,19 +81,29 @@ def create_portfolio():
     db.session.add(portfolio)
     db.session.commit()
 
-    # ✅ Handle images
+   # ✅ Handle images
     images = data.get("images", [])
     for img in images:
         if "url" in img:
-            db.session.add(PortfolioImage(url=img["url"], portfolio_id=portfolio.id))
+         db.session.add(PortfolioImage(url=img["url"], portfolio_id=portfolio.id))
 
-    # ✅ Handle media (optional, if you support videos)
-    media_items = data.get("media", [])
+# ✅ Handle videos (from either 'videos' or 'media')
+    videos = data.get("videos", [])
+    media_items = data.get("media", []) + [
+        {"type": "video", "url": v["url"]} for v in videos if "url" in v
+    ]
     for m in media_items:
         if "url" in m:
-            db.session.add(PortfolioMedia(url=m["url"], portfolio_id=portfolio.id))
+            mtype = m.get("type", "image")
+            db.session.add(PortfolioMedia(
+                type=mtype,
+                 url=m["url"],
+                caption=m.get("caption", ""),
+                portfolio_id=portfolio.id
+             ))
 
     db.session.commit()
+
 
     return jsonify({
         "message": "Portfolio created successfully",
@@ -112,14 +122,21 @@ def update_portfolio(portfolio_id):
     portfolio.slug = data.get("slug", portfolio.slug)
     db.session.commit()
 
-    # ✅ Refresh portfolio images (simple replace)
-    PortfolioImage.query.filter_by(portfolio_id=portfolio.id).delete()
-    images = data.get("images", [])
-    for img in images:
-        if "url" in img:
-            db.session.add(PortfolioImage(url=img["url"], portfolio_id=portfolio.id))
+    # ✅ Refresh portfolio media (images/videos)
+    PortfolioMedia.query.filter_by(portfolio_id=portfolio.id).delete()
+    media_items = data.get("media", [])
+    for m in media_items:
+        if "url" in m:
+            mtype = m.get("type", "image")
+            db.session.add(PortfolioMedia(
+            type=mtype,
+            url=m["url"],
+            caption=m.get("caption", ""),
+            portfolio_id=portfolio.id
+        ))
 
     db.session.commit()
+
 
     return jsonify({"message": "Portfolio updated successfully"}), 200
 
